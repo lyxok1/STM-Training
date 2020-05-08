@@ -7,12 +7,10 @@ import numpy as np
 import json
 import yaml
 import random
-import lmdb
 import pickle
 
 from PIL import Image
 from torch.utils.data import Dataset
-from pycocotools.coco import COCO
 
 DATA_CONTAINER = {}
 ROOT = '/media/shh/966E77776E774F4D'
