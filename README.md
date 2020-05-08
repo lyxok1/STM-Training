@@ -9,6 +9,7 @@ This repository contains the reimplemented training code for [Space Time Memory 
 - yaml
 - imgaug
 - easydict
+- progress
 
 ## Data Organization
 
