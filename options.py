@@ -30,8 +30,6 @@ OPTION.milestone = []              # epochs to degrades the learning rate
 OPTION.loss = 'both'               # 'ce' or 'iou' or 'both'
 OPTION.mode = 'threshold'          # 'mask' or 'recurrent' or 'threshold'
 OPTION.iou_threshold = 0.65        # used only for 'threshold' training
-OPTION.alpha = 1.2
-OPTION.lambdas = [1.0, 0.4]
 
 # ---------------------------------------- testing configuration --------------------------------------------
 OPTION.epoch_per_test = 1
