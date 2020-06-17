@@ -177,51 +177,9 @@ class KeyValue(nn.Module):
     def forward(self, x):  
         return self.Key(x), self.Value(x)
 
-class DynamicRoutine(nn.Module):
-
-    def __init__(self, channels, iters, centers):
-        super(DynamicRoutine, self).__init__()
-        self.iters = iters
-        self.centers = centers
-        self.channels = channels
-        self.convC = nn.Conv2d(channels, channels * centers, kernel_size=1, padding=0, stride=1)
-
-    def forward(self, feat, mask):
-
-        no, c, h, w = feat.shape
-        assert mask.shape[1] == no, '%d vs %d' % (mask.shape[1], no)
-        
-        feat = self.convC(feat).view(no, -1, h*w).permute(0, 2, 1).contiguous()
-        mask = F.interpolate(mask, size=(h, w), mode='nearest').view(no, h * w)
-        output = []
-        for i in range(no):
-            maskb = mask[i] >= 0.6
-            fg = feat[i, maskb, :]
-            nf = fg.shape[0]
-
-            if nf == 0:
-                # no forground, pad with zero centers
-                centers = torch.zeros(self.centers, self.channels).to(feat.device)
-            else:
-                fg = fg.view(nf, self.centers, self.channels).permute(1, 0, 2).contiguous()
-                logits = fg.new_zeros(self.centers, nf, 1)
-                for i in range(self.iters):
-                    co = torch.softmax(logits, dim=1)
-                    centers = torch.tanh(torch.sum(co * fg, dim=1))
-
-                    if i < self.iters - 1:
-                        update = torch.sum(centers.unsqueeze(1) * fg, dim=2)
-                        logits = logits + update.unsqueeze(2)
-
-            output.append(centers)
-
-        output = torch.stack(output, dim=0)
-
-        return output
-
-class STAN(nn.Module):
+class STM(nn.Module):
     def __init__(self, keydim, valdim):
-        super(STAN, self).__init__()
+        super(STM, self).__init__()
         self.Encoder_M = Encoder_M() 
         self.Encoder_Q = Encoder_Q()
 

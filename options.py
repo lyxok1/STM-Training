@@ -33,7 +33,6 @@ OPTION.iou_threshold = 0.65        # used only for 'threshold' training
 
 # ---------------------------------------- testing configuration --------------------------------------------
 OPTION.epoch_per_test = 1
-OPTION.threshold = 0.5
 
 # ------------------------------------------- other configuration -------------------------------------------
 OPTION.checkpoint = 'models'
@@ -41,5 +40,5 @@ OPTION.initial = ''      # path to initialize the backbone
 OPTION.resume = ''       # path to restart from the checkpoint
 OPTION.gpu_id = '0'      # defualt gpu-id (if not specified in cmd)
 OPTION.workers = 4
-OPTION.save_indexed_format = True
+OPTION.save_indexed_format = True # set True to save indexed format png file, otherwise segmentation with original image
 OPTION.output_dir = 'output'

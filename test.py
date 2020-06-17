@@ -3,7 +3,7 @@ from libs.dataset.transform import TrainTransform, TestTransform
 from libs.utils.logger import Logger, AverageMeter
 from libs.utils.loss import *
 from libs.utils.utility import write_mask, save_checkpoint, adjust_learning_rate, mask_iou
-from libs.models.models import STAN
+from libs.models.models import STM
 
 import torch
 import torch.nn as nn
@@ -47,7 +47,7 @@ def main():
     # Model
     print("==> creating model")
 
-    net = STAN(opt.keydim, opt.valdim)
+    net = STM(opt.keydim, opt.valdim)
     print('    Total params: %.2fM' % (sum(p.numel() for p in net.parameters())/1000000.0))
 
     # set eval to freeze batchnorm update
@@ -61,7 +61,7 @@ def main():
         p.requires_grad = False
 
     # Resume
-    title = 'STAN'
+    title = 'STM'
 
     if opt.resume:
         # Load checkpoint.

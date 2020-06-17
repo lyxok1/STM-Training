@@ -1,6 +1,6 @@
 # Trainig Script for Space Time Memory Network
 
-This repository contains the reimplemented training code for [Space Time Memory Network](http://openaccess.thecvf.com/content_ICCV_2019/html/Oh_Video_Object_Segmentation_Using_Space-Time_Memory_Networks_ICCV_2019_paper.html). We implement the data interface for DAVIS16, DAVIS17 and Youtube-VOS, the result of hybrid training on Youtube-VOS and DAVIS17 can be at most 71 J&F score on DAVIS17 validation set.
+This repository contains the reimplemented training code for [Space Time Memory Network](http://openaccess.thecvf.com/content_ICCV_2019/html/Oh_Video_Object_Segmentation_Using_Space-Time_Memory_Networks_ICCV_2019_paper.html). We implement the data interface for DAVIS16, DAVIS17 and Youtube-VOS, the result of hybrid training on Youtube-VOS and DAVIS17 can be at most 69.7 J&F score on DAVIS17 validation set.
 
 ## Required Package
 - torch
