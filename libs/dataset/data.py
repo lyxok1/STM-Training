@@ -3,6 +3,7 @@ import os
 import math
 import cv2
 import numpy as np
+import torch
 
 import json
 import yaml
@@ -14,7 +15,7 @@ from torch.utils.data import Dataset
 
 DATA_CONTAINER = {}
 ROOT = '/media/shh/966E77776E774F4D'
-MAX_TRAINING_OBJ = 5
+MAX_TRAINING_OBJ = 6
 MAX_TRAINING_SKIP = 100
 
 def multibatch_collate_fn(batch):
@@ -23,7 +24,8 @@ def multibatch_collate_fn(batch):
     frames = torch.stack([sample[0] for sample in batch])
     masks = torch.stack([sample[1] for sample in batch])
 
-    objs = [sample[2] for sample in batch]
+    objs = [torch.LongTensor([sample[2]]) for sample in batch]
+    objs = torch.cat(objs, dim=0)
 
     try:
         info = [sample[3] for sample in batch]
@@ -106,45 +108,52 @@ class YoutubeVOS(BaseData):
 
         num_obj = 0
         while num_obj == 0:
+            # outer-loop check the transformed mask is valid
+            while num_obj == 0:
+                # inner-loop ensure the read mask is valid
+                if self.train:
+                    last_sample = -1
+                    sample_frame = []
+                    nsamples = min(self.sampled_frames, nframes)
+                    for i in range(nsamples):
+                        if i == 0:
+                            last_sample = random.sample(range(0, nframes-nsamples+1), 1)[0]
+                        else:
+                            last_sample = random.sample(
+                                range(last_sample+1, min(last_sample+self.max_skip+1, nframes-nsamples+i+1)), 
+                            1)[0]
+                        sample_frame.append(frames[last_sample])
+                else:
+                    sample_frame = frames
+
+                frame = [np.array(Image.open(os.path.join(imgfolder, name+'.jpg'))) for name in sample_frame]
+                mask = [np.array(Image.open(os.path.join(annofolder, name+'.png'))) for name in sample_frame]
+                # clear dirty data
+                for msk in mask:
+                    msk[msk==255] = 0
+
+                num_obj = int(mask[0].max())
+
+            mask = [convert_mask(msk, self.max_obj) for msk in mask]
+
+            info = {'name': vid}
+            info['frame'] = [int(val['frames'][0][:5]) // 5 for idx, val in self.info[vid]['objects'].items()]
+            info['frame'].sort()
+            info['palette'] = Image.open(os.path.join(annofolder, frames[0]+'.png')).getpalette()
+            info['size'] = frame[0].shape[:2]
+
+            if self.transform is None:
+                raise RuntimeError('Lack of proper transformation')
+
+            frame, mask = self.transform(frame, mask, False)
 
             if self.train:
-                last_sample = -1
-                sample_frame = []
-                nsamples = min(self.sampled_frames, nframes)
-                for i in range(nsamples):
-                    if i == 0:
-                        last_sample = random.sample(range(0, nframes-nsamples+1), 1)[0]
+                num_obj = 0
+                for i in range(1, MAX_TRAINING_OBJ+1):
+                    if torch.sum(mask[0, i]) > 0:
+                        num_obj += 1
                     else:
-                        last_sample = random.sample(
-                            range(last_sample+1, min(last_sample+self.max_skip+1, nframes-nsamples+i+1)), 
-                        1)[0]
-                    sample_frame.append(frames[last_sample])
-            else:
-                sample_frame = frames
-
-            frame = [np.array(Image.open(os.path.join(imgfolder, name+'.jpg'))) for name in sample_frame]
-            mask = [np.array(Image.open(os.path.join(annofolder, name+'.png'))) for name in sample_frame]
-            # clear dirty data
-            for msk in mask:
-                msk[msk==255] = 0
-
-            num_obj = int(mask[0].max())
-
-        if self.train:
-            num_obj = min(num_obj, MAX_TRAINING_OBJ)
-
-        mask = [convert_mask(msk, self.max_obj) for msk in mask]
-
-        info = {'name': vid}
-        info['frame'] = [int(val['frames'][0][:5]) // 5 for idx, val in self.info[vid]['objects'].items()]
-        info['frame'].sort()
-        info['palette'] = Image.open(os.path.join(annofolder, frames[0]+'.png')).getpalette()
-        info['size'] = frame[0].shape[:2]
-
-        if self.transform is None:
-            raise RuntimeError('Lack of proper transformation')
-
-        frame, mask = self.transform(frame, mask, False)
+                        break
 
         return frame, mask, num_obj, info
 
@@ -313,8 +322,8 @@ class Davis17(BaseData):
 
             num_obj = mask[0].max()
 
-        if self.train:
-            num_obj = min(num_obj, MAX_TRAINING_OBJ)
+        # if self.train:
+        #     num_obj = min(num_obj, MAX_TRAINING_OBJ)
 
         mask = [convert_mask(msk, self.max_obj) for msk in mask]
 
@@ -326,6 +335,14 @@ class Davis17(BaseData):
             raise RuntimeError('Lack of proper transformation')
 
         frame, mask = self.transform(frame, mask, False)
+
+        if self.train:
+            num_obj = 0
+            for i in range(1, MAX_TRAINING_OBJ+1):
+                if torch.sum(mask[0, i]) > 0:
+                    num_obj += 1
+                else:
+                    break
 
         return frame, mask, num_obj, info
 

@@ -50,9 +50,9 @@ DAVIS16(DAVIS17)
 Where `JPEGImages` and `Annotations` contain the 480p frames and annotation masks of each video.
 
 ## Training and Testing
-To train the STM network, run following command
+To train the STM network, run following command.
 ```python3
-python3 train.py --gpu ${GPU}
+python3 train.py --gpu ${GPU-IDS}
 ```
 To test the STM network, run following command
 ```python3

@@ -254,19 +254,27 @@ class SampleObject(object):
 
         max_obj = annos[0].shape[2] - 1
         num_obj = 0
-        while num_obj < max_obj and np.sum(annos[0][:, :, num_obj+1]) > 0:
-            num_obj += 1
+
+        valid = np.sum(annos[0].reshape([-1, 1+max_obj]), axis=0) > 0
+        annos = [anno[:, :, valid] for anno in annos]
+
+        num_obj = annos[0].shape[2] - 1
+        # while num_obj < max_obj and np.sum(annos[0][:, :, num_obj+1]) > 0:
+        #     num_obj += 1
 
         if num_obj <= self.num:
-            return imgs, annos
-
-        sampled_idx = random.sample(range(1, num_obj+1), self.num)
-        sampled_idx.sort()
-        for idx, anno in enumerate(annos):
-            new_anno = anno.copy()
-            new_anno[:, :, self.num+1:] = 0.0
-            new_anno[:, :, 1:self.num+1] = anno[:, :, sampled_idx]
-            annos[idx] = new_anno
+            for idx, anno in enumerate(annos):
+                new_anno = np.zeros(anno.shape[:2]+(self.num+1,))
+                new_anno[:, :, :num_obj+1] = anno
+                annos[idx] = new_anno
+        else:
+            sampled_idx = random.sample(range(1, num_obj+1), self.num)
+            sampled_idx.sort()
+            for idx, anno in enumerate(annos):
+                new_anno = np.zeros(anno.shape[:2]+(self.num+1,))
+                new_anno[:, :, 1:self.num+1] = anno[:, :, sampled_idx]
+                new_anno[:, :, 0] = anno[:, :, 0]
+                annos[idx] = new_anno
 
         return imgs, annos
 

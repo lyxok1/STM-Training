@@ -19,16 +19,16 @@ OPTION.epochs_per_increment = 5
 
 # ---------------------------------------- training configuration -------------------------------------------
 OPTION.epochs = 120
-OPTION.train_batch = 1
+OPTION.train_batch = 4
 OPTION.learning_rate = 0.00001
 OPTION.gamma = 0.1
 OPTION.momentum = (0.9, 0.999)
 OPTION.solver = 'adam'             # 'sgd' or 'adam'
 OPTION.weight_decay = 5e-4
-OPTION.iter_size = 4
+OPTION.iter_size = 1
 OPTION.milestone = []              # epochs to degrades the learning rate
 OPTION.loss = 'both'               # 'ce' or 'iou' or 'both'
-OPTION.mode = 'threshold'          # 'mask' or 'recurrent' or 'threshold'
+OPTION.mode = 'recurrent'          # 'mask' or 'recurrent' or 'threshold'
 OPTION.iou_threshold = 0.65        # used only for 'threshold' training
 
 # ---------------------------------------- testing configuration --------------------------------------------

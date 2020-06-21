@@ -17,6 +17,7 @@ import shutil
 import time
 import pickle
 import argparse
+import random
 from progress.bar import Bar
 from collections import OrderedDict
 
@@ -26,17 +27,19 @@ MAX_FLT = 1e6
 
 def parse_args():
     parser = argparse.ArgumentParser('Training Mask Segmentation')
-    parser.add_argument('--gpu', default='', type=str, help='set gpu id to train the network')
+    parser.add_argument('--gpu', default='', type=str, help='set gpu id to train the network, split with comma')
     return parser.parse_args()
 
 def main():
 
     start_epoch = 0
+    random.seed(0)
 
     args = parse_args()
     # Use GPU
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu if args.gpu != '' else str(opt.gpu_id)
     use_gpu = torch.cuda.is_available() and (args.gpu != '' or int(opt.gpu_id)) >= 0
+    gpu_ids = [int(val) for val in args.gpu.split(',')]
 
     if not os.path.isdir(opt.checkpoint):
         os.makedirs(opt.checkpoint)
@@ -86,19 +89,22 @@ def main():
         )
 
     trainloader = data.DataLoader(trainset, batch_size=opt.train_batch, shuffle=True, num_workers=opt.workers,
-                                  collate_fn=multibatch_collate_fn)
+                                  collate_fn=multibatch_collate_fn, drop_last=True)
 
     testloader = data.DataLoader(testset, batch_size=1, shuffle=False, num_workers=opt.workers,
                                  collate_fn=multibatch_collate_fn)
     # Model
     print("==> creating model")
 
-    net = STM(opt.keydim, opt.valdim)
+    net = STM(opt.keydim, opt.valdim, 'train', 
+            mode=opt.mode, iou_threshold=opt.iou_threshold)
     print('    Total params: %.2fM' % (sum(p.numel() for p in net.parameters())/1000000.0))
-
     net.eval()
     if use_gpu:
         net = net.cuda()
+
+    assert opt.train_batch % len(gpu_ids) == 0
+    net = nn.DataParallel(net, device_ids=gpu_ids, dim=0)
 
     # set training parameters
     for p in net.parameters():
@@ -164,9 +170,9 @@ def main():
             print('==> Initialize model with weight file {}'.format(opt.initial))
             weight = torch.load(opt.initial)
             if isinstance(weight, OrderedDict):
-                net.load_param(weight)
+                net.module.load_param(weight)
             else:
-                net.load_param(weight['state_dict'])
+                net.module.load_param(weight['state_dict'])
 
         logger = Logger(os.path.join(opt.checkpoint, opt.mode+'_log.txt'), resume=False)
         start_epoch = 0
@@ -182,6 +188,7 @@ def main():
         print('\nEpoch: [%d | %d] LR: %f' % (epoch + 1, opt.epochs, opt.learning_rate))
         adjust_learning_rate(optimizer, epoch, opt)
 
+        net.module.phase = 'train'
         train_loss = train(trainloader,
                            model=net,
                            criterion=criterion,
@@ -193,12 +200,12 @@ def main():
                            threshold=opt.iou_threshold)
 
         if (epoch + 1) % opt.epoch_per_test == 0:
+            net.module.phase = 'test'
             test_loss = test(testloader,
-                            model=net,
+                            model=net.module,
                             criterion=criterion,
                             epoch=epoch,
-                            use_cuda=use_gpu,
-                            opt=opt)
+                            use_cuda=use_gpu)
 
         # append logger file
         logger.log(epoch+1, opt.learning_rate, train_loss)
@@ -244,53 +251,29 @@ def train(trainloader, model, criterion, optimizer, epoch, use_cuda, iter_size, 
     optimizer.zero_grad()
 
     for batch_idx, data in enumerate(trainloader):
-        frames, masks, objs, _ = data
+        frames, masks, objs, infos = data
         # measure data loading time
         data_time.update(time.time() - end)
         
         if use_cuda:
             frames = frames.cuda()
             masks = masks.cuda()
+            objs = objs.cuda()
+
+        objs[objs==0] = 1
 
         N, T, C, H, W = frames.size()
         max_obj = masks.shape[2]-1
 
         total_loss = 0.0
+        out = model(frame=frames, mask=masks, num_objects=objs)
         for idx in range(N):
-            frame = frames[idx]
-            mask = masks[idx]
-            num_objects = objs[idx]
-
-            keys = []
-            vals = []
             for t in range(1, T):
-                # memorize
-                if t-1 == 0 or mode == 'mask':
-                    tmp_mask = mask[t-1:t]
-                elif mode == 'recurrent':
-                    tmp_mask = out
-                else:
-                    pred_mask = out[0, 1:num_objects+1]
-                    iou = mask_iou(pred_mask, mask[t-1, 1:num_objects+1])
-
-                    if iou > threshold:
-                        tmp_mask = out
-                    else:
-                        tmp_mask = mask[t-1:t]
-
-                key, val, _ = model(frame=frame[t-1:t, :, :, :], mask=tmp_mask, num_objects=num_objects)
-                keys.append(key)
-                vals.append(val)
-
-                # segment
-                tmp_key = torch.cat(keys, dim=1)
-                tmp_val = torch.cat(vals, dim=1)
-                logits, ps = model(frame=frame[t:t+1, :, :, :], keys=tmp_key, values=tmp_val, num_objects=num_objects, max_obj=max_obj)
-
-                out = torch.softmax(logits, dim=1)
-                gt = mask[t:t+1]
-                
-                total_loss = total_loss + criterion(out, gt, num_objects)
+                gt = masks[idx, t:t+1]
+                pred = out[idx, t-1: t]
+                No = objs[idx].item()
+                    
+                total_loss = total_loss + criterion(pred, gt, No)
 
         total_loss = total_loss / (N * (T-1))
 
@@ -313,14 +296,14 @@ def train(trainloader, model, criterion, optimizer, epoch, use_cuda, iter_size, 
             batch=batch_idx + 1,
             size=len(trainloader),
             data=data_time.val,
-            loss=loss.val
+            loss=loss.avg
         )
         bar.next()
     bar.finish()
 
     return loss.avg
 
-def test(testloader, model, criterion, epoch, use_cuda, opt):
+def test(testloader, model, criterion, epoch, use_cuda):
 
     data_time = AverageMeter()
 

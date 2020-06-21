@@ -178,7 +178,7 @@ class KeyValue(nn.Module):
         return self.Key(x), self.Value(x)
 
 class STM(nn.Module):
-    def __init__(self, keydim, valdim):
+    def __init__(self, keydim, valdim, phase='test', mode='recurrent', iou_threshold=0.5):
         super(STM, self).__init__()
         self.Encoder_M = Encoder_M() 
         self.Encoder_Q = Encoder_Q()
@@ -192,11 +192,21 @@ class STM(nn.Module):
 
         self.Memory = Memory()
         self.Decoder = Decoder(2*valdim, 256)
+        self.phase = phase
+        self.mode = mode
+        self.iou_threshold = iou_threshold
+
+        assert self.phase in ['train', 'test']
 
     def load_param(self, weight):
 
         s = self.state_dict()
         for key, val in weight.items():
+
+            # process ckpt from parallel module
+            if key[:6] == 'module':
+                key = key[7:]
+
             if key in s and s[key].shape == val.shape:
                 s[key][...] = val
             elif key not in s:
@@ -215,17 +225,22 @@ class STM(nn.Module):
         bg_batch = []
         # print('\n')
         # print(num_objects)
-        for o in range(1, num_objects+1): # 1 - no
-            frame_batch.append(frame)
-            mask_batch.append(masks[:,o])
+        try:
+            for o in range(1, num_objects+1): # 1 - no
+                frame_batch.append(frame)
+                mask_batch.append(masks[:,o])
 
-        for o in range(1, num_objects+1):
-            bg_batch.append(torch.clamp(1.0 - masks[:, o], min=0.0, max=1.0))
+            for o in range(1, num_objects+1):
+                bg_batch.append(torch.clamp(1.0 - masks[:, o], min=0.0, max=1.0))
 
-        # make Batch
-        frame_batch = torch.cat(frame_batch, dim=0)
-        mask_batch = torch.cat(mask_batch, dim=0)
-        bg_batch = torch.cat(bg_batch, dim=0)
+            # make Batch
+            frame_batch = torch.cat(frame_batch, dim=0)
+            mask_batch = torch.cat(mask_batch, dim=0)
+            bg_batch = torch.cat(bg_batch, dim=0)
+        except RuntimeError as re:
+            print(re)
+            print(num_objects)
+            raise re
 
         r4, _, _, _ = self.Encoder_M(frame_batch, mask_batch, bg_batch) # no, c, h, w
         _, c, h, w = r4.size()
@@ -263,7 +278,59 @@ class STM(nn.Module):
 
     def forward(self, frame, mask=None, keys=None, values=None, num_objects=None, max_obj=None):
 
-        if mask is not None: # keys
-            return self.memorize(frame, mask, num_objects)
+        if self.phase == 'test':
+            if mask is not None: # keys
+                return self.memorize(frame, mask, num_objects)
+            else:
+                return self.segment(frame, keys, values, num_objects, max_obj)
+        elif self.phase == 'train':
+
+            N, T, C, H, W = frame.size()
+            max_obj = mask.shape[2]-1
+
+            total_loss = 0.0
+            batch_out = []
+            for idx in range(N):
+
+                num_object = num_objects[idx].item()
+
+                batch_keys = []
+                batch_vals = []
+                tmp_out = []
+                for t in range(1, T):
+                    # memorize
+                    if t-1 == 0 or self.mode == 'mask':
+                        tmp_mask = mask[idx, t-1:t]
+                    elif self.mode == 'recurrent':
+                        tmp_mask = out
+                    else:
+                        pred_mask = out[0, 1:num_object+1]
+                        iou = mask_iou(pred_mask, mask[idx, t-1, 1:num_object+1])
+
+                        if iou > self.iou_threshold:
+                            tmp_mask = out
+                        else:
+                            tmp_mask = mask[idx, t-1:t]
+
+                    key, val, _ = self.memorize(frame=frame[idx, t-1:t], masks=tmp_mask, 
+                        num_objects=num_object)
+
+                    batch_keys.append(key)
+                    batch_vals.append(val)
+                    # segment
+                    tmp_key = torch.cat(batch_keys, dim=1)
+                    tmp_val = torch.cat(batch_vals, dim=1)
+                    logits, ps = self.segment(frame=frame[idx, t:t+1], keys=tmp_key, values=tmp_val, 
+                        num_objects=num_object, max_obj=max_obj)
+
+                    out = torch.softmax(logits, dim=1)
+                    tmp_out.append(out)
+                
+                batch_out.append(torch.cat(tmp_out, dim=0))
+
+            batch_out = torch.stack(batch_out, dim=0) # B, T, No, H, W
+
+            return batch_out
+
         else:
-            return self.segment(frame, keys, values, num_objects, max_obj)
+            raise NotImplementedError('unsupported forward mode %s' % self.phase)

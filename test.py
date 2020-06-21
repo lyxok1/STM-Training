@@ -68,7 +68,8 @@ def main():
         print('==> Resuming from checkpoint {}'.format(opt.resume))
         assert os.path.isfile(opt.resume), 'Error: no checkpoint directory found!'
         checkpoint = torch.load(opt.resume, map_location=device)
-        net.load_param(checkpoint['state_dict'])
+        state = checkpoint['state_dict']
+        net.load_param(state)
 
     # Train and val
     print('==> Runing model on dataset {}, totally {:d} videos'.format(opt.valset, len(testloader)))
