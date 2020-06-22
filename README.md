@@ -47,7 +47,7 @@ DAVIS16(DAVIS17)
       |----data
       |------|-----db_info.yaml
 ```
-Where `JPEGImages` and `Annotations` contain the 480p frames and annotation masks of each video.
+Where `JPEGImages` and `Annotations` contain the 480p frames and annotation masks of each video. The `db_info.yaml` contains the meta information of each video sequences and can be found at the davis evaluation [repository](https://github.com/fperazzi/davis-2017/blob/master/data/db_info.yaml).
 
 ## Training and Testing
 To train the STM network, run following command.
