@@ -1,0 +1,38 @@
+trainset: ['DAVIS17', 'VOS']
+valset: 'DAVIS17'
+datafreq: [5, 1]
+input_size: [240, 427]   
+sampled_frames: 3        
+max_skip: [50, 10]       
+samples_per_video: 1
+
+keydim: 128
+valdim: 512
+arch: resnet50
+save_freq: 5
+epochs_per_increment: 5
+
+epochs: 240
+train_batch: 1
+learning_rate: 0.00001
+gamma: 0.1
+momentum: [0.9, 0.999]
+solver: 'adam'             
+weight_decay: 5e-4
+iter_size: 4            
+loss: 'both'               
+mode: 'recurrent'          
+iou_threshold: 0.65        
+
+epoch_per_test: 1
+correction_rate: 180
+loop: 10
+
+checkpoint: 'models'
+initial: ''
+resume: ''
+video_path: ''
+mask_path: ''
+gpu_id: 1
+save_indexed_format: 'index'
+output_dir: 'output'
