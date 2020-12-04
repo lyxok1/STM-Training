@@ -27,7 +27,7 @@ We provide pre-trained model with different backbone in our codebase, results ar
 
 | model |backbone|data backend| J | F | J & F | link |FPS|
 |:-----:|:------:|:----------:|:-:|:-:|:-----:|:----:|:-:|
-| STM-Cycle | Resnet18 | DALI | 65.3 | 70.8 | 68.1 | [Google Drive](https://drive.google.com/file/d/1tSTNBeqa9hyKBPX6NzL1N7EgkWAg_2cv/view?usp=sharing)|14.8|
+| STM-Cycle | Resnet18 | DALI | 65.3 | 70.8 | 68.1 | [Google Drive](https://drive.google.com/file/d/1R4RkDPfrNz8JzJNNqFhYIPhbruunNnp5/view?usp=sharing)|14.8|
 | STM-Cycle | Resnet50 | PIL | 70.5 | 76.3 | 73.4 | [Google Drive](https://drive.google.com/file/d/1tSTNBeqa9hyKBPX6NzL1N7EgkWAg_2cv/view?usp=sharing)|9.3|
 
 ## Runing
@@ -43,7 +43,7 @@ python3 train.py --cfg config.yaml OPTION_KEY OPTION_VAL
 
 To test the STM network, run following command
 ```bash
-python3 test.py --cfg config.yaml OPTION_KEY OPTION_VAL
+python3 test.py --cfg config.yaml initial ${PATH_TO_MODEL} OPTION_KEY OPTION_VAL
 ```
 The test results will be saved as indexed png file at `${ROOT}/${output_dir}/${valset}`.
 
