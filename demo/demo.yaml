@@ -1,0 +1,14 @@
+input_size: [240, 427]   
+
+keydim: 128
+valdim: 512
+save_freq: 5
+
+correction_rate: 180
+loop: 10
+
+initial: ''
+video_path: 'demo/data/videos/horsejump-high'
+mask_path: 'demo/data/masks/horsejump-high.png'
+gpu_id: 0
+output_dir: 'demo/output'

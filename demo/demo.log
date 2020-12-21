@@ -1,0 +1,8 @@
+[INFO][2020-10-11 12:08:46,839][__main__:37] Loading videos from demo/data/videos/horsejump-high
+[INFO][2020-10-11 12:08:47,612][__main__:50] Loading total 50 frames
+[INFO][2020-10-11 12:08:47,613][__main__:51] Loading mask from demo/data/masks/horsejump-high.png
+[INFO][2020-10-11 12:08:48,348][__main__:77] Creating model
+[INFO][2020-10-11 12:08:49,886][__main__:80] Total params: 38.93M
+[INFO][2020-10-11 12:08:53,381][__main__:93] Loading weights from checkpoint ../finetune/DAVIS17/stm_cycle_80.pth
+[INFO][2020-10-11 12:08:53,608][__main__:102] Runing model on input video and mask
+[INFO][2020-10-11 12:09:03,402][__main__:183] Results are saved at: demo/output/horsejump-high
