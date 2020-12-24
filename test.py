@@ -132,10 +132,6 @@ def test(testloader, model, use_cuda, opt):
         pred = [masks[0:1]]
         keys = []
         vals = []
-        # cache_iou = []
-        # cache_key = []
-        # cache_val = []
-        # globe_mem = torch.load('../STM/mem')[info['name']]
         ref_mask = None
         for t in range(1, T):
             with torch.no_grad():
@@ -159,14 +155,6 @@ def test(testloader, model, use_cuda, opt):
                 t1 = time.time()
                 # memorize
                 key, val, _ = model(frame=frames[t-1:t], mask=tmp_mask, num_objects=num_objects)
-
-                # ref_key, ref_val = globe_mem[t-1]
-
-                # ref_key = ref_key[0, 1:num_objects+1, :, 0].to(key.device).permute(0, 2, 3, 1).contiguous().view(num_objects, -1, opt.keydim)
-                # ref_val = ref_val[0, 1:num_objects+1, :, 0].to(val.device).permute(0, 2, 3, 1).contiguous().view(num_objects, -1, opt.valdim)
-
-                # print(t)
-                # print(torch.mean(torch.abs(ref_key - key)), torch.mean(torch.abs(ref_val - val)))
 
                 # segment
                 tmp_key = torch.cat(keys+[key], dim=1)
