@@ -22,7 +22,7 @@ from PIL import Image
 from progress.bar import Bar
 
 MAX_FLT = 1e6
-opt, _ = parse_args()
+opt = parse_args()
 
 # Use CUDA
 device = 'cuda:{}'.format(opt.gpu_id)
@@ -76,7 +76,7 @@ def main():
     # Model
     log.info("Creating model")
 
-    net = STAN(opt)
+    net = STAN(opt.keydim, opt.valdim)
     log.info('Total params: %.2fM' % (sum(p.numel() for p in net.parameters())/1000000.0))
 
     # set eval to freeze batchnorm update

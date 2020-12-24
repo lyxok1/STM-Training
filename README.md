@@ -31,9 +31,9 @@ We provide pre-trained model with different backbone in our codebase, results ar
 | STM-Cycle | Resnet50 | PIL | 70.5 | 76.3 | 73.4 | [Google Drive](https://drive.google.com/file/d/1tSTNBeqa9hyKBPX6NzL1N7EgkWAg_2cv/view?usp=sharing)|9.3|
 
 ## Runing
-Appending the current directory into the search path of python interpreter
+Appending the `./libs` folder to the search path of python interpreter
 ```bash
-export PYTHONPATH=${PYTHONPATH}:./
+export PYTHONPATH=${PYTHONPATH}:./libs
 ```
 
 To train the STM network, run following command.
