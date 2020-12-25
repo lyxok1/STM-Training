@@ -7,7 +7,7 @@ save_freq: 5
 correction_rate: 180
 loop: 10
 
-initial: ''
+initial: '/path/to/the/model'
 video_path: 'demo/data/videos/horsejump-high'
 mask_path: 'demo/data/masks/horsejump-high.png'
 gpu_id: 0
