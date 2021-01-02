@@ -7,7 +7,6 @@ import numpy as np
 import json
 import yaml
 import random
-import lmdb
 import pickle
 
 from PIL import Image
