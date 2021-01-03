@@ -2,7 +2,7 @@
 
 This codebase implemented training code for [Space Time Memory Network](http://openaccess.thecvf.com/content_ICCV_2019/html/Oh_Video_Object_Segmentation_Using_Space-Time_Memory_Networks_ICCV_2019_paper.html) with some [cyclic features](https://arxiv.org/abs/2010.12176).
 
-![sample results](./demo/sample/demo.gif)
+<img src="./demo/sample/demo.gif" alt="sample results" style="max-width:75%;">
 
 ## Requirement
 ### python package
