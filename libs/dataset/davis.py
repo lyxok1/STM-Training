@@ -33,7 +33,7 @@ class Davis16(BaseData):
 
             targetset = 'train' if train else 'val'
             self.info = db
-            self.videos = [info['name'] for info in db if info['set']==targetset]
+            self.videos = [info['name'] for info in db if info['set']==targetset and info['year']==2016]
 
         self.samples_per_video = samples_per_video
         self.sampled_frames = sampled_frames
@@ -81,9 +81,11 @@ class Davis16(BaseData):
         mask = [np.array(Image.open(os.path.join(annofolder, name+'.png'))) for name in sample_frame]
         num_obj = max([int(msk.max()) for msk in mask])
         mask = [convert_mask(msk, self.max_obj) for msk in mask]
+        for msk in mask:
+            msk[msk==255] = 1
 
         info = {'name': vid}
-        info['palette'] = Image.open(os.path.join(annofolder, frames[0]+'.png')).getpalette()
+        info['palette'] = [0, 0, 0, 255, 255, 255]
         info['size'] = frame[0].shape[:2]
 
         if self.transform is None:
