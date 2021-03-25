@@ -1,0 +1,7 @@
+torch==0.4.1
+opencv-python
+pillow
+pyyaml
+yacs
+imgaug
+progress
