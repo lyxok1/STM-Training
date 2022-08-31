@@ -4,6 +4,10 @@ This codebase implemented training code for [Space Time Memory Network](http://o
 
 <img src="./demo/sample/demo.gif" alt="sample results" style="max-width:75%;">
 
+## Upddate
+
+- We have post a journal version of our paper [here](https://arxiv.org/abs/2111.01323), the modified cycle version of [AOT model](https://github.com/13633491388/AOT_cycle) in our journal paper is also available now.
+
 ## Requirement
 ### python package
 - torch
@@ -29,7 +33,7 @@ We provide pre-trained model with different backbone in our codebase, results ar
 
 | model |backbone|data backend| J | F | J & F | link |FPS|
 |:-----:|:------:|:----------:|:-:|:-:|:-----:|:----:|:-:|
-| STM-Cycle | Resnet18 | DALI | 65.3 | 70.8 | 68.1 | [Google Drive](https://drive.google.com/file/d/1R4RkDPfrNz8JzJNNqFhYIPhbruunNnp5/view?usp=sharing)|14.8|
+| STM-Cycle | Resnet18 | DALI | 65.3 | 70.8 | 68.1 | [Google Drive](https://drive.google.com/file/d/1Lp9X2b0_som0WagT2MAovJ0NokjCfGUJ/view?usp=sharing) |14.8|
 | STM-Cycle | Resnet50 | PIL | 70.5 | 76.3 | 73.4 | [Google Drive](https://drive.google.com/file/d/1tSTNBeqa9hyKBPX6NzL1N7EgkWAg_2cv/view?usp=sharing)|9.3|
 
 ## Runing
@@ -74,6 +78,15 @@ author = {Li, Yuxi and Xu, Ning and Peng Jinlong and John See and Lin Weiyao},
 title = {Delving into the Cyclic Mechanism in Semi-supervised Video Object Segmentation},
 booktitle = {Neural Information Processing System (NeurIPS)},
 year = {2020}
+}
+
+@article{li2022exploring,
+  title={Exploring the Semi-Supervised Video Object Segmentation Problem from a Cyclic Perspective},
+  author={Li, Yuxi and Xu, Ning and Yang, Wenjie and See, John and Lin, Weiyao},
+  journal={International Journal of Computer Vision},
+  pages={1--17},
+  year={2022},
+  publisher={Springer}
 }
 ```
 
