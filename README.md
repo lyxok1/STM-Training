@@ -4,7 +4,7 @@ This codebase implemented training code for [Space Time Memory Network](http://o
 
 <img src="./demo/sample/demo.gif" alt="sample results" style="max-width:75%;">
 
-## Upddate
+## Update
 
 - We have post a journal version of our paper [here](https://arxiv.org/abs/2111.01323), the modified cycle version of [AOT model](https://github.com/13633491388/AOT_cycle) in our journal paper is also available now.
 
